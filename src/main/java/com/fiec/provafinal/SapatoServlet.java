@@ -58,7 +58,23 @@ public class SapatoServlet extends HttpServlet {
 
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String id = getId(request);
+        Sapato atual = em.find(Sapato.class, id);
+        String nome = request.getParameter("nome");
+        String preco = request.getParameter("preco");
+        String imagem = request.getParameter("imagem");
+        String tamanho = request.getParameter("tamanho");
+        String marca = request.getParameter("marca");
+        em.getTransaction().begin();
+        if(atual != null){
+            atual.setNome(nome);
+            atual.setPreco(Double.parseDouble(preco));
+            atual.setImagem(imagem);
+            atual.setTamanho(parseInt(tamanho));
+            atual.setMarca(marca);
+            em.merge(atual);
+        }
 
+        em.getTransaction().commit();
 
         response.setContentType("text/html");
         response.getWriter().println("Produto Atualizado");
@@ -68,6 +84,10 @@ public class SapatoServlet extends HttpServlet {
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String id = getId(request);
 
+        em.getTransaction().begin();
+        Sapato s = em.find(Sapato.class, id);
+        em.remove(s);
+        em.getTransaction().commit();
         response.setContentType("text/html");
         response.getWriter().println("Produto Deletado");
     }
