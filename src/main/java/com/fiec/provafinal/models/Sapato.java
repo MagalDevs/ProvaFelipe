@@ -4,18 +4,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
 @Builder
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
+@NoArgsConstructor
+
 @Entity
 public class Sapato {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -25,4 +23,15 @@ public class Sapato {
     private int tamanho;
     private String marca;
 
+    @Override
+    public String toString() {
+        return "Sapato{" +
+                "id='" + id + '\'' +
+                ", nome='" + nome + '\'' +
+                ", preco=" + preco +
+                ", imagem='" + imagem + '\'' +
+                ", tamanho=" + tamanho +
+                ", marca='" + marca + '\'' +
+                '}';
+    }
 }

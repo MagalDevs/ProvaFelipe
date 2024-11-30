@@ -20,17 +20,17 @@ public abstract class GenericRepositorioImpl<T, U> implements GenericRepositorio
     }
 
     @Override
-    public List<T> ler() {
+    public List<T> acharTodos() {
         return entityManager.createQuery("select t from " + getMyClass().getSimpleName() + " t").getResultList();
     }
 
     @Override
-    public T lerPorId(U id) {
+    public T acharPorId(U id) {
         return entityManager.find(getMyClass(), id);
     }
 
     @Override
-    public void atualiza(T t, U id) {
+    public void atualizar(T t, U id) {
         entityManager.getTransaction().begin();
         T t1 = entityManager.find(getMyClass(), id);
         if(t1 != null){
@@ -40,7 +40,7 @@ public abstract class GenericRepositorioImpl<T, U> implements GenericRepositorio
     }
 
     @Override
-    public void deleta(U id) {
+    public void deletar(U id) {
         entityManager.getTransaction().begin();
         T t1 = entityManager.find(getMyClass(), id);
         entityManager.remove(t1);

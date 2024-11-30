@@ -24,82 +24,42 @@ import java.util.UUID;
         maxFileSize = 1024 * 1024 * 10, // 10 MB
         maxRequestSize = 1024 * 1024 * 10 * 5 // 50 MB
 )
+
 @WebServlet("/uploads")
 public class UploadServlet extends HttpServlet {
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws
+            IOException, ServletException {
         Part filePart = request.getPart("arquivo");
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String extensao = fileName.split("\\.")[1];
+        String extensao = fileName.split("\\.")[1]; // Pega só a extensao do arquivo
         String bucket = "alunofiecbucket";
+
         String temp = System.getenv("TEMP");
         String uuid = UUID.randomUUID().toString();
         String nomeArquivoNoBucket = uuid + "." + extensao;
+        System.out.println(nomeArquivoNoBucket);
         File file = new File(temp + "/" + nomeArquivoNoBucket);
         filePart.write(file.getAbsolutePath());
-
         S3Client s3 = S3Client.builder()
-                .region(Region.US_EAST_1) // Substitua pela região do seu bucket
+                .region(Region.US_EAST_1)
                 .build();
-
         Map<String, String> metadata = new HashMap<>();
         metadata.put("author", "Fiec");
 
         PutObjectRequest putOb = PutObjectRequest.builder()
                 .bucket(bucket)
-                .key("37046" + nomeArquivoNoBucket)
+                .key("37388/"+nomeArquivoNoBucket)
                 .metadata(metadata)
                 .build();
-
+        System.out.println(putOb);
         s3.putObject(putOb, RequestBody.fromFile(new File(file.getAbsolutePath())));
         System.out.println("Successfully placed " + nomeArquivoNoBucket + " into bucket " + bucket);
 
         file.delete();
 
-        // Redirecionando ou exibindo uma mensagem de sucesso
         response.setContentType("text/html");
         response.getWriter().println("<h1>Arquivo Enviado com sucesso!</h1>");
-
-
-
-        /*
-        Part filePart = request.getPart("arquivo");
-        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String extensao = fileName.split("\\.")[1];
-        String bucket = "alunofiecbucket";
-
-        // Salvando o arquivo em um diretório específico
-        String temp = System.getenv("TEMP");
-
-        String uuid = UUID.randomUUID().toString();
-
-        String nomeArquivoNoBucket = uuid + "." + extensao;
-        File file = new File(temp + "/" + nomeArquivoNoBucket);
-
-        filePart.write(file.getAbsolutePath());
-
-        S3Client s3 = S3Client.builder()
-                .region(Region.US_EAST_1) // Substitua pela região do seu bucket
-                .build();
-
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("author", "Fiec");
-
-        PutObjectRequest putOb = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(nomeArquivoNoBucket)
-                .metadata(metadata)
-                .build();
-
-        s3.putObject(putOb, RequestBody.fromFile(new File(file.getAbsolutePath())));
-        System.out.println("Successfully placed " + nomeArquivoNoBucket + " into bucket " + bucket);
-
-        file.delete();
-
-        // Redirecionando ou exibindo uma mensagem de sucesso
-        response.setContentType("text/html");
-        response.getWriter().println("<h1>Arquivo Enviado com sucesso!</h1>");
-         */
-
     }
 }

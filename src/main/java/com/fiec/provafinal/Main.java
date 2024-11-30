@@ -18,11 +18,13 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
+
         SqsClient sqsClient = SqsClient.builder()
                 .region(Region.US_EAST_1)
                 .build();
 
         String nomeDaFila = "Fiec2024";
+
         while(true){
             Thread.sleep(30000);
             try {
@@ -30,14 +32,16 @@ public class Main {
                         .queueUrl(nomeDaFila)
                         .maxNumberOfMessages(1)
                         .build();
-                List<software.amazon.awssdk.services.sqs.model.Message> responses = sqsClient.receiveMessage(receiveMessageRequest).messages();
-                for(software.amazon.awssdk.services.sqs.model.Message m : responses){
+                List<software.amazon.awssdk.services.sqs.model.Message> responses =
+                        sqsClient.receiveMessage(receiveMessageRequest).messages();
 
-                    System.out.println(m);
+                for(software.amazon.awssdk.services.sqs.model.Message m : responses){
                     ObjectMapper objectMapper = new ObjectMapper();
                     JsonNode jsonNode = objectMapper.readTree(m.body());
                     String token = jsonNode.get("token").asText();
+
                     sendMessage(token);
+
                     DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
                             .queueUrl(nomeDaFila)
                             .receiptHandle(m.receiptHandle())
@@ -45,22 +49,16 @@ public class Main {
                     sqsClient.deleteMessage(deleteMessageRequest);
                 }
 
-            } catch (SqsException e) {
+            } catch (Exception e) {
                 sqsClient.close();
-                System.err.println(e.awsErrorDetails().errorMessage());
+                System.err.println(e.getMessage());
                 System.exit(1);
-
-            } catch (JsonMappingException e) {
-                throw new RuntimeException(e);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
             }
         }
     }
 
     private static void sendMessage(String token){
-        System.out.println(token);
-        FirebaseSingleton.getInstance();
+        com.fiec.provafinal.FirebaseSingleton.getInstance();
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(Notification.builder()
@@ -69,12 +67,11 @@ public class Main {
                         .build())
                 .build();
 
-        String resp = null;
         try {
-            resp = FirebaseMessaging.getInstance().send(message);
+            String resp = FirebaseMessaging.getInstance().send(message);
+            System.out.println("Successfully sent message: " + resp);
         } catch (FirebaseMessagingException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Successfully sent message: " + resp);
     }
 }

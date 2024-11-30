@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -14,82 +15,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.Integer.parseInt;
 
 @WebServlet("/sapatos")
 public class SapatoServlet extends HttpServlet {
 
-    private SapatoRepositorio sapatoRepositorio;
-
+    private SapatoRepositorio repository;
     private EntityManager em;
 
     public SapatoServlet(){
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("minhaUnidadeDePersistencia");
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("persistence37388");
         this.em = entityManagerFactory.createEntityManager();
-
-    }
-
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String nome = request.getParameter("nome");
-        String preco = request.getParameter("preco");
-        String imagem = request.getParameter("imagem");
-        String tamanho = request.getParameter("tamanho");
-        String marca = request.getParameter("marca");
-        Sapato sapato = Sapato.builder()
-                .nome(nome)
-                .preco(Double.parseDouble(preco))
-                .imagem(imagem)
-                .tamanho(parseInt(tamanho))
-                .marca(marca)
-                .build();
-
-        response.setContentType("text/html");
-        response.getWriter().println("Produto Salvo");
-    }
-    // Read  /produtos
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-        response.setContentType("text/html");
-        List<Sapato> sapatos = sapatoRepositorio.ler();
-
-        response.getWriter().println(sapatos.stream().map(Sapato::toString).collect(Collectors.toList()));
-
-    }
-
-    public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String id = getId(request);
-        Sapato atual = em.find(Sapato.class, id);
-        String nome = request.getParameter("nome");
-        String preco = request.getParameter("preco");
-        String imagem = request.getParameter("imagem");
-        String tamanho = request.getParameter("tamanho");
-        String marca = request.getParameter("marca");
-        em.getTransaction().begin();
-        if(atual != null){
-            atual.setNome(nome);
-            atual.setPreco(Double.parseDouble(preco));
-            atual.setImagem(imagem);
-            atual.setTamanho(parseInt(tamanho));
-            atual.setMarca(marca);
-            em.merge(atual);
-        }
-
-        em.getTransaction().commit();
-
-        response.setContentType("text/html");
-        response.getWriter().println("Produto Atualizado");
-
-    }
-
-    public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String id = getId(request);
-
-        em.getTransaction().begin();
-        Sapato s = em.find(Sapato.class, id);
-        em.remove(s);
-        em.getTransaction().commit();
-        response.setContentType("text/html");
-        response.getWriter().println("Produto Deletado");
     }
 
     private static String getId(HttpServletRequest req){
@@ -97,5 +32,67 @@ public class SapatoServlet extends HttpServlet {
         String[] paths = path.split("/");
         String id = paths[paths.length - 1];
         return id;
+    }
+
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        List<Sapato> entities = em.createQuery("select t from " + Sapato.class.getSimpleName() + " t").getResultList();
+        System.out.println(entities);
+        resp.setContentType("text/html");
+        String content = "";
+        if(entities != null){
+            content = entities.stream().map(Sapato::toString).collect(Collectors.joining("<br/>"));
+        }
+        resp.getWriter().println(content);
+    }
+
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String nome = req.getParameter("nome");
+        double preco = Double.parseDouble(req.getParameter("preco"));
+        String imagem = req.getParameter("imagem");
+        int tamanho = Integer.parseInt(req.getParameter("tamanho"));
+        String marca = req.getParameter("marca");
+        Sapato p = Sapato.builder()
+                .nome(nome)
+                .preco(preco)
+                .imagem(imagem)
+                .tamanho(tamanho)
+                .marca(marca)
+                .build();
+        em.getTransaction().begin();
+        em.merge(p);
+        em.getTransaction().commit();
+        resp.setContentType("text/html");
+        resp.getWriter().println("<h1>Hello from POST do SAPATO!</h1>");
+    }
+
+    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String id = getId(req);
+        Sapato entity = em.find(Sapato.class, id);
+        String nome = req.getParameter("nome");
+        double preco = Double.parseDouble(req.getParameter("preco"));
+        String imagem = req.getParameter("imagem");
+        int tamanho = Integer.parseInt(req.getParameter("tamanho"));
+        String marca = req.getParameter("marca");
+        em.getTransaction().begin();
+        if(entity != null){
+            entity.setNome(nome);
+            entity.setPreco(preco);
+            entity.setImagem(imagem);
+            entity.setTamanho(tamanho);
+            entity.setMarca(marca);
+            em.merge(entity);
+        }
+        em.getTransaction().commit();
+        resp.setContentType("text/html");
+        resp.getWriter().println("<h1>Hello from PUT do SAPATO!</h1>");
+    }
+
+    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String id = getId(req);
+        System.out.println(id);
+        em.getTransaction().begin();
+        Sapato entity = em.find(Sapato.class, id);
+        em.remove(entity);
+        em.getTransaction().commit();
     }
 }
